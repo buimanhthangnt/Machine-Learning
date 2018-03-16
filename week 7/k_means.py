@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import itertools
 
 class KMeans(object):
     """ a K-means clustering with L2 distance """
@@ -53,15 +54,23 @@ class KMeans(object):
             #########################################################################
             #                         END OF YOUR CODE                              #
             #########################################################################
-        centr_idxs = []
         num_labels = len(np.unique(y))
-        for cluster in clusters:
-            count = np.zeros(num_labels)
-            for idx in cluster: count[y[idx]] += 1
-            print(count)
-            centr_idxs.append(np.argmax(count))
+        counts = np.zeros((self.num_clusters, num_labels))
+        for i, cluster in enumerate(clusters):
+            for idx in cluster: counts[i][y[idx]] += 1
+                
+        best_true_preds = -1
         new_centroids = np.zeros(self.centroids.shape)
-        print(centr_idxs)
+        for perm in list(itertools.permutations(list(range(num_labels)))):
+            true_preds = 0
+            for i in range(self.num_clusters):
+                true_preds += counts[i][perm[i]]
+            if true_preds > best_true_preds:
+                for idx, v in enumerate(perm):
+                    new_centroids[v] = self.centroids[idx]
+                best_true_preds = true_preds
+        self.centroids = new_centroids
+                
         
     def predict(self, X, num_loops=0):
         """
@@ -190,7 +199,7 @@ class KMeans(object):
             # Hint: Look up the function numpy.argsort.                             #
             #########################################################################
             sorted_idx = np.argsort(dists, axis=1)
-            y_pred = sorted_idx[i,0]
+            y_pred[i] = sorted_idx[i,0]
             #########################################################################
             #                           END OF YOUR CODE                            # 
             #########################################################################
